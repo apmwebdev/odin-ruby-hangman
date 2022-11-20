@@ -1,23 +1,21 @@
 class GameEngine
   attr_reader :word, :game_over, :hint_arr, :wrong_guesses, :dict_manager,
-    :game_ui
+    :game_ui, :io_manager
 
   NUM_GUESSES = 8
 
   def initialize
-    @word = ""
-    @game_over = false
-    @hint_arr = []
-    @wrong_guesses = []
     @dict_manager = DictionaryManager.new
-    @game_ui = nil
+    @word = @dict_manager.choose_hidden_word
+    @game_over = false
+    @hint_arr = Array.new(word.length) { "_" }
+    @wrong_guesses = []
+    @game_ui = GameUI.new(@word, @hint_arr, @wrong_guesses, NUM_GUESSES)
+    @io_manager = IOManager.new(@word, @hint_arr, @wrong_guesses, NUM_GUESSES)
     gather_external_resources
   end
 
   def play
-    choose_hidden_word
-    init_hint_array
-    @game_ui = GameUI.new(@word, @hint_arr, @wrong_guesses, NUM_GUESSES)
     until game_over
       render_main_game_screen
       get_user_input
@@ -26,10 +24,6 @@ class GameEngine
   end
 
   private
-
-  def init_hint_array
-    word.length.times { @hint_arr.push("_") }
-  end
 
   def render_main_game_screen
     game_ui.render_main_game_screen
@@ -102,11 +96,11 @@ class GameEngine
   end
 
   def choose_hidden_word
-    @word = dict_manager.choose_word
+    dict_manager.choose_word
   end
 
   def save_game
-    puts "save_gave"
+    io_manager.save
   end
 
   def load_game
