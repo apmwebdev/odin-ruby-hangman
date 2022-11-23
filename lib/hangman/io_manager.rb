@@ -12,7 +12,7 @@ class IOManager
     @num_guesses = num_guesses
   end
 
-  def save
+  def save_game
     save_data = {
       word: word,
       hint_arr: hint_arr,
@@ -20,11 +20,16 @@ class IOManager
       num_guesses: num_guesses
     }.to_json
 
-    File.truncate(SAVE_FILENAME, 0)
+    File.truncate(SAVE_FILENAME, 0) if File.exist?(SAVE_FILENAME)
     File.open(SAVE_FILENAME, "w") { |file| file.puts save_data }
   end
 
-  def load
-    # load
+  def load_game
+    if File.exist?(SAVE_FILENAME)
+      save_file = File.open(SAVE_FILENAME, "r")
+      save_file_contents = save_file.read
+      save_file.close
+      JSON.parse(save_file_contents)
+    end
   end
 end

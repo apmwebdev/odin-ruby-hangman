@@ -2,32 +2,29 @@ class GameEngine
   attr_reader :word, :game_over, :hint_arr, :wrong_guesses, :dict_manager,
     :game_ui, :io_manager
 
-  NUM_GUESSES = 8
+  NUM_GUESSES = 6
 
   def initialize
     @dict_manager = DictionaryManager.new
-    @word = @dict_manager.choose_hidden_word
-    @game_over = false
+    @dict_manager.maybe_create_dictionary
+    @word = @dict_manager.choose_word
     @hint_arr = Array.new(word.length) { "_" }
     @wrong_guesses = []
     @game_ui = GameUI.new(@word, @hint_arr, @wrong_guesses, NUM_GUESSES)
     @io_manager = IOManager.new(@word, @hint_arr, @wrong_guesses, NUM_GUESSES)
-    gather_external_resources
+    @game_over = false
   end
 
   def play
+    game_ui.start_game
     until game_over
-      render_main_game_screen
+      game_ui.render_main_game_screen
       get_user_input
       check_for_game_over
     end
   end
 
   private
-
-  def render_main_game_screen
-    game_ui.render_main_game_screen
-  end
 
   def get_user_input
     input_is_valid = false
@@ -91,19 +88,22 @@ class GameEngine
     game_ui.show_lose_message
   end
 
-  def gather_external_resources
-    dict_manager.maybe_create_dictionary
-  end
-
-  def choose_hidden_word
-    dict_manager.choose_word
-  end
-
   def save_game
-    io_manager.save
+    io_manager.save_game
+    game_ui.show_saved
   end
 
   def load_game
-    puts "load_game"
+    data = io_manager.load_game
+    if data.nil?
+      game_ui.show_no_save_data
+    else
+      @word = data["word"]
+      @hint_arr = data["hint_arr"]
+      @wrong_guesses = data["wrong_guesses"]
+      @game_ui = GameUI.new(@word, @hint_arr, @wrong_guesses, NUM_GUESSES)
+      @io_manager = IOManager.new(@word, @hint_arr, @wrong_guesses, NUM_GUESSES)
+      game_ui.show_loaded
+    end
   end
 end
